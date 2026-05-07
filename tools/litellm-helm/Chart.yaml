@@ -1,0 +1,19 @@
+apiVersion: v2
+name: litellm
+description: A Helm chart for LiteLLM - Unified LLM proxy gateway
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - litellm
+  - llm
+  - proxy
+  - openai
+  - claude
+  - ollama
+home: https://github.com/BerriAI/litellm
+sources:
+  - https://github.com/BerriAI/litellm
+maintainers:
+  - name: Shokan Contributors
+    email: dev@shokan.ai

@@ -1,0 +1,72 @@
+# Archivo de ejemplo: values-production.yaml
+# Uso: helm install ollama ./ollama-helm -f values-production.yaml
+
+replicaCount: 1
+
+image:
+  repository: ollama/ollama
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 8000m
+    memory: 16Gi
+  requests:
+    cpu: 4000m
+    memory: 8Gi
+
+persistence:
+  enabled: true
+  size: 200Gi
+  storageClassName: "fast-ssd"  # Ajustar según tu clúster
+
+service:
+  type: ClusterIP
+  annotations: {}
+
+# Selectores de nodos para ejecutar en máquinas específicas
+nodeSelector:
+  workload: llm
+
+# Toleraciones para nodos con taints
+tolerations:
+  - key: "workload"
+    operator: "Equal"
+    value: "llm"
+    effect: "NoSchedule"
+
+# Afinidad para colocación de pods
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: compute
+              operator: In
+              values:
+                - high-memory
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: ollama.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: ollama-tls
+      hosts:
+        - ollama.example.com
+
+ollama:
+  models:
+    - mistral
+    - neural-chat
+  environment:
+    OLLAMA_HOST: "0.0.0.0:11434"
+    # OLLAMA_NUM_GPU: "1"  # Descomentar si tienes GPU
+    OLLAMA_DEBUG: "1"

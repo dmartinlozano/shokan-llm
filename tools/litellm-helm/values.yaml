@@ -1,0 +1,172 @@
+# LiteLLM Helm Chart Values
+# Default values for litellm deployment
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/berriai/litellm
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: litellm.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+persistence:
+  enabled: true
+  storageClassName: "standard"
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  mountPath: /app/data
+  # existingClaim: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# LiteLLM specific configuration
+litellm:
+  # API Port
+  port: 8000
+
+  # Database configuration (optional)
+  database:
+    enabled: false
+    # url: "postgresql://user:password@postgres:5432/litellm"
+
+  # Enable proxy
+  proxyEnabled: true
+
+  # Models configuration
+  models:
+    # Local Ollama models
+    - model_name: "ollama-mistral"
+      litellm_params:
+        model: "ollama/mistral"
+        api_base: "http://ollama:11434"
+    
+    # Remote models (requires API keys via environment variables)
+    # - model_name: "gpt-4"
+    #   litellm_params:
+    #     model: "gpt-4"
+    
+    # - model_name: "claude-3"
+    #   litellm_params:
+    #     model: "claude-3-opus-20240229"
+
+  # Router settings
+  router:
+    fallback_on_bad_llm_2_request_timeout: true
+    requestTimeoutSeconds: 600
+
+  # Logging
+  logging:
+    level: "INFO"
+    # Log DB configuration
+    sql_logs: false
+    logFile: "/app/logs/litellm.log"
+
+# Environment variables
+env: []
+  # - name: OPENAI_API_KEY
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: litellm-keys
+  #       key: openai-key
+
+# Secrets for API keys (create with: kubectl create secret generic litellm-keys)
+secrets:
+  - name: OPENAI_API_KEY
+    # valueFrom:
+    #   secretKeyRef:
+    #     name: litellm-keys
+    #     key: openai-key
+
+# ConfigMap for litellm_config.yaml
+# This is the main LiteLLM configuration file
+configMap:
+  enabled: true
+  litellm_config_yaml: |
+    model_list:
+      - model_name: ollama-mistral
+        litellm_params:
+          model: "ollama/mistral"
+          api_base: "http://ollama:11434"
+      # - model_name: gpt-4
+      #   litellm_params:
+      #     model: "gpt-4"
+      # - model_name: claude-3
+      #   litellm_params:
+      #     model: "claude-3-opus-20240229"
+    
+    general_settings:
+      master_key: "sk-1234"
+      database_type: "postgres"
+      # database_connection_pool_size: 10
+      # log_level: "debug"
+    
+    router_settings:
+      default_max_retries: 3
+      default_timeout: 600
+      fallback_on_bad_llm_2_request_timeout: true
+
+# Additional volumes
+extraVolumes: []
+
+# Additional volume mounts
+extraVolumeMounts: []
+
+# Lifecycle hooks
+lifecycle: {}

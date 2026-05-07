@@ -1,0 +1,12 @@
+auth:
+  adminUser: admin
+postgresql:
+  enabled: false
+externalDatabase:
+  type: postgresql
+  host: postgresql
+  port: 5432
+  user: keycloak
+  database: keycloak
+ingress:
+  enabled: false

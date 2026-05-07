@@ -1,0 +1,17 @@
+apiVersion: v2
+name: ollama
+description: A Helm chart for Ollama local LLM engine
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - ollama
+  - llm
+  - ai
+  - local-ai
+home: https://ollama.ai
+sources:
+  - https://github.com/ollama/ollama
+maintainers:
+  - name: Shokan Contributors
+    email: dev@shokan.ai
