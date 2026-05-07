@@ -1,0 +1,11 @@
+# Credentials backup — NUNCA committear
+credentials-backup.age
+
+# Data backups — NUNCA committear
+backups/
+
+# macOS
+.DS_Store
+**/.DS_Store
+installer/.DS_Store
+**/*.DS_Store

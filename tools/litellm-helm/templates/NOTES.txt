@@ -1,0 +1,53 @@
+1. Get the LiteLLM service information:
+  {{- if contains "NodePort" .Values.service.type }}
+  
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "litellm.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+
+  {{- else if contains "LoadBalancer" .Values.service.type }}
+  
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+  You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "litellm.fullname" . }}'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "litellm.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+
+  {{- else }}
+  
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "litellm.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:{{ .Values.service.port }} to access LiteLLM"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME {{ .Values.service.port }}:{{ .Values.service.port }}
+
+  {{- end }}
+
+2. Check LiteLLM health:
+  kubectl --namespace {{ .Release.Namespace }} get pods -l "app.kubernetes.io/name={{ include "litellm.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+
+3. View logs:
+  kubectl logs --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "litellm.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -f
+
+4. Access LiteLLM API:
+  - REST API: http://<service-address>:{{ .Values.service.port }}
+  - Endpoints:
+    * /health - Health check
+    * /models - List available models
+    * /chat/completions - Chat completions (OpenAI compatible)
+    * /completions - Text completions
+
+5. Test with curl:
+  curl http://localhost:{{ .Values.service.port }}/models
+
+6. Make a completion request:
+  curl -X POST http://localhost:{{ .Values.service.port }}/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+      "model": "ollama-mistral",
+      "messages": [
+        {"role": "user", "content": "Hello!"}
+      ]
+    }'
+
+7. View configuration:
+  kubectl get cm {{ include "litellm.fullname" . }}-config -n {{ .Release.Namespace }} -o yaml
+
+For more information, visit: https://github.com/BerriAI/litellm

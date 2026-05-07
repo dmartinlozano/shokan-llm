@@ -1,0 +1,125 @@
+# Archivo de ejemplo: values-production.yaml
+# Uso: helm install litellm ./litellm-helm -f values-production.yaml
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/berriai/litellm
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 4000m
+    memory: 4Gi
+  requests:
+    cpu: 2000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClassName: "fast-ssd"
+
+service:
+  type: ClusterIP
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: litellm.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: litellm-tls
+      hosts:
+        - litellm.example.com
+
+nodeSelector:
+  workload: api-gateway
+
+tolerations:
+  - key: "workload"
+    operator: "Equal"
+    value: "api-gateway"
+    effect: "NoSchedule"
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - litellm
+          topologyKey: kubernetes.io/hostname
+
+litellm:
+  port: 8000
+  proxyEnabled: true
+  
+  database:
+    enabled: true
+    url: "postgresql://litellm:password@postgres.shokanllm.svc.cluster.local:5432/litellm"
+  
+  logging:
+    level: "INFO"
+    sql_logs: true
+  
+  router:
+    fallback_on_bad_llm_2_request_timeout: true
+    requestTimeoutSeconds: 600
+
+configMap:
+  enabled: true
+  litellm_config_yaml: |
+    model_list:
+      # Local Ollama models
+      - model_name: ollama-mistral
+        litellm_params:
+          model: "ollama/mistral"
+          api_base: "http://ollama.shokanllm.svc.cluster.local:11434"
+      
+      - model_name: ollama-neural-chat
+        litellm_params:
+          model: "ollama/neural-chat"
+          api_base: "http://ollama.shokanllm.svc.cluster.local:11434"
+      
+      # Remote models (requires API keys)
+      - model_name: gpt-4
+        litellm_params:
+          model: "gpt-4"
+      
+      - model_name: claude-3-opus
+        litellm_params:
+          model: "claude-3-opus-20240229"
+    
+    general_settings:
+      master_key: "sk-1234"
+      database_type: "postgres"
+      database_connection_pool_size: 20
+      log_level: "info"
+      proxy_budget_ratelimit_key: "user-id"
+      max_parallel_requests: 50
+    
+    router_settings:
+      default_max_retries: 3
+      default_timeout: 600
+      fallback_on_bad_llm_2_request_timeout: true

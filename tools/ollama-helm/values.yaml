@@ -1,0 +1,113 @@
+# Ollama Helm Chart Values
+# Default values for ollama deployment
+
+replicaCount: 1
+
+image:
+  repository: ollama/ollama
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: false  # Ollama puede necesitar acceso a GPU/hardware
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: false
+
+service:
+  type: ClusterIP
+  port: 11434
+  targetPort: 11434
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ollama.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
+    cpu: 2000m
+    memory: 4Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+
+persistence:
+  enabled: true
+  storageClassName: "standard"
+  accessMode: ReadWriteOnce
+  size: 50Gi
+  mountPath: /root/.ollama
+  # existingClaim: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Ollama specific configuration
+ollama:
+  # List of models to pre-download
+  # Note: These will be downloaded during pod startup
+  models:
+    - mistral
+    # - neural-chat
+    # - llama2
+    # - orca-mini
+
+  # Environment variables
+  # GPU support: Set OLLAMA_CUDA_COMPUTE_CAPABILITY or similar for GPU
+  # CPU only: Use default settings
+  environment:
+    # OLLAMA_NUM_GPU: "0"  # Set to GPU count or 0 for CPU only
+    OLLAMA_HOST: "0.0.0.0:11434"
+
+# Environment variables
+env: []
+  # - name: OLLAMA_NUM_GPU
+  #   value: "1"
+  # - name: OLLAMA_MODELS
+  #   value: "mistral:latest"
+
+# Additional volumes
+extraVolumes: []
+
+# Additional volume mounts
+extraVolumeMounts: []
+
+# Lifecycle hooks
+lifecycle: {}
+  # postStart:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "ollama pull mistral"]

@@ -1,0 +1,7 @@
+auth:
+  database: postgres
+persistence:
+  size: 20Gi
+primary:
+  service:
+    type: ClusterIP
