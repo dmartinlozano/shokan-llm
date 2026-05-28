@@ -1,12 +1,12 @@
 auth:
-  adminUser: admin
-postgresql:
-  enabled: false
-externalDatabase:
-  type: postgresql
+  secretName: "shokanllm-secret"
+  adminUser: "admin"
+
+database:
   host: postgresql
   port: 5432
+  name: keycloak
   user: keycloak
-  database: keycloak
+
 ingress:
   enabled: false

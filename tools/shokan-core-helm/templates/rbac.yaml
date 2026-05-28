@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "shokan-core.fullname" . }}
+  labels:
+    {{- include "shokan-core.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "shokan-core.fullname" . }}-secret-rw
+  labels:
+    {{- include "shokan-core.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["shokanllm-secret"]
+  verbs: ["get", "patch"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "create", "delete"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs"]
+  verbs: ["get", "list", "patch"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["create", "get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "shokan-core.fullname" . }}-secret-rw
+  labels:
+    {{- include "shokan-core.labels" . | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "shokan-core.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "shokan-core.fullname" . }}-secret-rw
+  apiGroup: rbac.authorization.k8s.io

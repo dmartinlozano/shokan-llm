@@ -1,0 +1,92 @@
+model
+  schema 1.1
+
+# ──────────────────────────────────────────────
+# Identidades
+# ──────────────────────────────────────────────
+
+type user
+
+type group
+  relations
+    define member: [user]
+
+
+# ──────────────────────────────────────────────
+# Shokan — gestión de la plataforma Shokan-LLM
+# ──────────────────────────────────────────────
+
+type shokan
+  relations
+    define admin:  [user, group#member]
+    define member: [user, group#member]
+
+    define can_manage_users:       admin
+    define can_manage_services:    admin
+    define can_manage_datasources: admin
+    define can_manage_permissions: admin
+    define can_backup:             admin
+    define can_view_config:        admin or member
+    define can_use_ai:             admin or member
+
+# ──────────────────────────────────────────────
+# MCP Server — datos "calientes" via conectores MCP
+# Ejemplos de objeto: mcp_server:git, mcp_server:jira, mcp_server:slack
+# ──────────────────────────────────────────────
+
+type mcp_server
+  relations
+    define shokan: [shokan]
+    define allowed_role: [shokan#admin, shokan#member]
+    define allowed_user: [user]
+
+    define can_use:       allowed_user or allowed_role or admin from shokan
+    define can_configure: admin from shokan
+    define can_delete:    admin from shokan
+
+# ──────────────────────────────────────────────
+# LLM Model — control de acceso a modelos via LiteLLM
+# Ejemplos de objeto: llm_model:ollama-llama3, llm_model:gpt-4o
+# ──────────────────────────────────────────────
+
+type llm_model
+  relations
+    define shokan:       [shokan]
+    define allowed_user: [user]
+
+    define can_call: allowed_user or admin from shokan
+
+# ──────────────────────────────────────────────
+# Datasource — fuentes de datos "frías" (S3, Drive, Filesystem…)
+# Ejemplos de objeto: datasource:gdrive-sales, datasource:s3-reports
+# ──────────────────────────────────────────────
+
+type datasource
+  relations
+    define shokan: [shokan]
+    define owner:  [user]
+    define viewer: [user]
+
+    define can_ingest: owner or admin from shokan
+    define can_read:   viewer or owner or admin from shokan
+    define can_delete: owner or admin from shokan
+
+# ──────────────────────────────────────────────
+# Document — fragmentos indexados en Qdrant (RAG)
+# Ejemplos de objeto: document:gdrive-001, document:s3-informe-q1
+# ──────────────────────────────────────────────
+
+type document
+  relations
+    define datasource: [datasource]
+    define owner:      [user]
+    define viewer:     [user]
+
+    define can_read:   viewer or owner or can_read from datasource
+    define can_delete: owner or can_delete from datasource
+
+type ui_permission
+  relations
+    define allowed_role: [shokan#admin, shokan#member]
+    define allowed_user: [user]
+    define can_use: allowed_user or allowed_role

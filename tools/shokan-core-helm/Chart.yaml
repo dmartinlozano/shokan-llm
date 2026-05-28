@@ -1,0 +1,13 @@
+apiVersion: v2
+name: shokan-core
+description: Shokan-LLM Core — Chainlit UI + LiteLLM chat interface
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - shokan
+  - llm
+  - chainlit
+  - ai
+maintainers:
+  - name: Shokan Contributors

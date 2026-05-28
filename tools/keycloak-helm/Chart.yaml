@@ -1,0 +1,16 @@
+apiVersion: v2
+name: keycloak
+description: A Helm chart for Keycloak — identity and access management
+type: application
+version: 1.0.0
+appVersion: "26.3.3"
+keywords:
+  - keycloak
+  - iam
+  - oidc
+  - oauth2
+home: https://www.keycloak.org
+sources:
+  - https://github.com/keycloak/keycloak
+maintainers:
+  - name: Shokan Contributors

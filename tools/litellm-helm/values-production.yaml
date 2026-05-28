@@ -5,8 +5,8 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/berriai/litellm
-  tag: "latest"
-  pullPolicy: IfNotPresent
+  tag: "main-latest"
+  pullPolicy: Always
 
 resources:
   limits:
@@ -112,7 +112,6 @@ configMap:
           model: "claude-3-opus-20240229"
     
     general_settings:
-      master_key: "sk-1234"
       database_type: "postgres"
       database_connection_pool_size: 20
       log_level: "info"

@@ -1,0 +1,38 @@
+# Tool versions installed by install.sh
+# Update these values when upgrading a component, then re-run the installer.
+
+qdrant:
+  helm_chart: "qdrant/qdrant"
+  chart_version: "1.17.1"
+  app_version: "v1.13.1"
+
+ollama:
+  helm_chart: "local (tools/ollama-helm)"
+  image: "ollama/ollama"
+  image_tag: "latest"
+
+litellm:
+  helm_chart: "local (tools/litellm-helm)"
+  image: "ghcr.io/berriai/litellm"
+  image_tag: "latest"
+
+postgresql:
+  helm_chart: "bitnami/postgresql"
+  chart_version: "18.6.4"
+  app_version: "17.5.0"
+
+keycloak:
+  helm_chart: "local (tools/keycloak-helm)"
+  image: "quay.io/keycloak/keycloak"
+  image_tag: "26.3.3"
+
+openfga:
+  helm_chart: "openfga/openfga"
+  chart_version: "0.3.4"
+  app_version: "v1.15.1"
+
+shokan_core:
+  helm_chart: "local (tools/shokan-core-helm)"
+  image: "shokan-core"
+  image_tag: "latest"
+  built_locally: true

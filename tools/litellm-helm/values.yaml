@@ -5,8 +5,8 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/berriai/litellm
-  pullPolicy: IfNotPresent
-  tag: "latest"
+  pullPolicy: Always
+  tag: "main-latest"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -76,91 +76,32 @@ tolerations: []
 
 affinity: {}
 
+auth:
+  secretName: "shokanllm-secret"
+
 # LiteLLM specific configuration
 litellm:
-  # API Port
   port: 8000
-
-  # Database configuration (optional)
-  database:
-    enabled: false
-    # url: "postgresql://user:password@postgres:5432/litellm"
-
-  # Enable proxy
   proxyEnabled: true
 
-  # Models configuration
-  models:
-    # Local Ollama models
-    - model_name: "ollama-mistral"
-      litellm_params:
-        model: "ollama/mistral"
-        api_base: "http://ollama:11434"
-    
-    # Remote models (requires API keys via environment variables)
-    # - model_name: "gpt-4"
-    #   litellm_params:
-    #     model: "gpt-4"
-    
-    # - model_name: "claude-3"
-    #   litellm_params:
-    #     model: "claude-3-opus-20240229"
-
-  # Router settings
-  router:
-    fallback_on_bad_llm_2_request_timeout: true
-    requestTimeoutSeconds: 600
-
-  # Logging
   logging:
     level: "INFO"
-    # Log DB configuration
-    sql_logs: false
-    logFile: "/app/logs/litellm.log"
 
-# Environment variables
+# Environment variables (API keys, etc.)
 env: []
-  # - name: OPENAI_API_KEY
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: litellm-keys
-  #       key: openai-key
-
-# Secrets for API keys (create with: kubectl create secret generic litellm-keys)
-secrets:
-  - name: OPENAI_API_KEY
-    # valueFrom:
-    #   secretKeyRef:
-    #     name: litellm-keys
-    #     key: openai-key
 
 # ConfigMap for litellm_config.yaml
-# This is the main LiteLLM configuration file
 configMap:
   enabled: true
   litellm_config_yaml: |
-    model_list:
-      - model_name: ollama-mistral
-        litellm_params:
-          model: "ollama/mistral"
-          api_base: "http://ollama:11434"
-      # - model_name: gpt-4
-      #   litellm_params:
-      #     model: "gpt-4"
-      # - model_name: claude-3
-      #   litellm_params:
-      #     model: "claude-3-opus-20240229"
-    
     general_settings:
-      master_key: "sk-1234"
-      database_type: "postgres"
-      # database_connection_pool_size: 10
-      # log_level: "debug"
-    
+      store_model_in_db: false
+      drop_params: true
+      allow_client_side_credentials: true
+
     router_settings:
-      default_max_retries: 3
-      default_timeout: 600
-      fallback_on_bad_llm_2_request_timeout: true
+      num_retries: 2
+      timeout: 120
 
 # Additional volumes
 extraVolumes: []

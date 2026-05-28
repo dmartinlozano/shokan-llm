@@ -1,0 +1,94 @@
+{{- if and .Values.chatCleanup.enabled .Values.persistence.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "shokan-core.fullname" . }}-chat-cleanup
+  labels:
+    {{- include "shokan-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: chat-cleanup
+spec:
+  schedule: {{ .Values.chatCleanup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            {{- include "shokan-core.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: chat-cleanup
+        spec:
+          serviceAccountName: {{ include "shokan-core.fullname" . }}
+          restartPolicy: OnFailure
+          containers:
+          - name: chat-cleanup
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command: ["python", "src/jobs/chat_cleanup.py"]
+            env:
+            - name: PYTHONPATH
+              value: /app/src
+            - name: CHAT_DATA_DIR
+              value: {{ .Values.persistence.mountPath | quote }}
+            - name: CHAT_RETENTION_DAYS
+              value: {{ .Values.chatCleanup.retentionDays | quote }}
+            volumeMounts:
+            - name: chat-data
+              mountPath: {{ .Values.persistence.mountPath }}
+            resources:
+              {{- toYaml .Values.chatCleanup.resources | nindent 14 }}
+          volumes:
+          - name: chat-data
+            persistentVolumeClaim:
+              claimName: {{ include "shokan-core.fullname" . }}-chats
+{{- end }}
+---
+{{- if .Values.ingester.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "shokan-core.fullname" . }}-ingester
+  labels:
+    {{- include "shokan-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingester
+spec:
+  schedule: {{ .Values.ingester.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "shokan-core.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: ingester
+        spec:
+          serviceAccountName: {{ include "shokan-core.fullname" . }}
+          restartPolicy: OnFailure
+          containers:
+          - name: ingester
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command: ["python", "src/jobs/ingest.py"]
+            env:
+            - name: PYTHONPATH
+              value: /app/src
+            - name: KUBERNETES_NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+            - name: OLLAMA_URL
+              value: {{ .Values.ingester.ollamaUrl | quote }}
+            - name: QDRANT_URL
+              value: {{ .Values.ingester.qdrantUrl | quote }}
+            - name: EMBED_MODEL
+              value: {{ .Values.ingester.embedModel | quote }}
+            - name: CHUNK_SIZE
+              value: {{ .Values.ingester.chunkSize | quote }}
+            - name: CHUNK_OVERLAP
+              value: {{ .Values.ingester.chunkOverlap | quote }}
+            resources:
+              {{- toYaml .Values.ingester.resources | nindent 14 }}
+{{- end }}

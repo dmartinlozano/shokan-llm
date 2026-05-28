@@ -9,3 +9,8 @@ backups/
 **/.DS_Store
 installer/.DS_Store
 **/*.DS_Store
+tests/core/__pycache__
+core/src/services/__pycache__
+core/src/jobs/__pycache__
+core/src/connectors/__pycache__
+core/src/__pycache__

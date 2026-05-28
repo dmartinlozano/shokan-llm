@@ -1,0 +1,73 @@
+replicaCount: 1
+
+image:
+  repository: shokan-core
+  pullPolicy: Never   # image built locally in Minikube
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 7860
+
+ingress:
+  enabled: false
+  hostname: ""
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+env:
+  LITELLM_URL: "http://litellm:8000"
+  DEFAULT_MODEL: "ollama/llama3"
+  KEYCLOAK_URL: "http://keycloak.shokanllm.svc.cluster.local:8080"
+  KEYCLOAK_REALM: "shokanllm"
+  KC_ADMIN_USER: "shokan-svc"
+  OPENFGA_URL: "http://openfga.shokanllm.svc.cluster.local:8080"
+  KUBERNETES_NAMESPACE: "shokanllm"
+  OLLAMA_URL: "http://ollama.shokanllm.svc.cluster.local:11434"
+  QDRANT_URL: "http://qdrant.shokanllm.svc.cluster.local:6333"
+  EMBED_MODEL: "nomic-embed-text"
+  RAG_TOP_K: "5"
+
+auth:
+  secretName: "shokanllm-secret"
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: ""   # "" = cluster default; set explicitly for production (e.g. "standard-rwo")
+  mountPath: /data/chats
+  accessMode: ReadWriteOnce
+
+chatCleanup:
+  enabled: true
+  schedule: "0 3 * * *"   # daily at 03:00 UTC
+  retentionDays: 30        # delete conversations older than this many days
+  resources:
+    limits:
+      cpu: 100m
+      memory: 64Mi
+    requests:
+      cpu: 50m
+      memory: 32Mi
+
+ingester:
+  enabled: true
+  schedule: "0 * * * *"   # every hour — adjust as needed
+  ollamaUrl: "http://ollama.shokanllm.svc.cluster.local:11434"
+  qdrantUrl: "http://qdrant.shokanllm.svc.cluster.local:6333"
+  embedModel: "nomic-embed-text"
+  chunkSize: "1000"
+  chunkOverlap: "200"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi

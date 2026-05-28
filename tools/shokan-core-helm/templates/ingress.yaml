@@ -1,0 +1,21 @@
+{{- if and .Values.ingress.enabled .Values.ingress.hostname }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "shokan-core.fullname" . }}
+  labels:
+    {{- include "shokan-core.labels" . | nindent 4 }}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.ingress.hostname }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "shokan-core.fullname" . }}
+            port:
+              name: http
+{{- end }}

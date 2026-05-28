@@ -1,5 +1,5 @@
-# Archivo de ejemplo: values-production.yaml
-# Uso: helm install ollama ./ollama-helm -f values-production.yaml
+# Example file: values-production.yaml
+# Usage: helm install ollama ./ollama-helm -f values-production.yaml
 
 replicaCount: 1
 
@@ -19,7 +19,7 @@ resources:
 persistence:
   enabled: true
   size: 200Gi
-  storageClassName: "fast-ssd"  # Ajustar según tu clúster
+  storageClassName: "fast-ssd"  # Adjust to match your cluster
 
 service:
   type: ClusterIP
@@ -68,5 +68,5 @@ ollama:
     - neural-chat
   environment:
     OLLAMA_HOST: "0.0.0.0:11434"
-    # OLLAMA_NUM_GPU: "1"  # Descomentar si tienes GPU
+    # OLLAMA_NUM_GPU: "1"  # Uncomment if you have a GPU
     OLLAMA_DEBUG: "1"

@@ -1,0 +1,65 @@
+replicaCount: 1
+
+image:
+  repository: quay.io/keycloak/keycloak
+  pullPolicy: IfNotPresent
+  tag: "26.3.3"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hostname: ""
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+auth:
+  secretName: "shokanllm-secret"
+  adminUser: "admin"
+
+# Keycloak-specific settings
+keycloak:
+  hostname: ""
+  hostnameStrict: "false"
+  httpEnabled: "true"
+  proxyHeaders: "xforwarded"
+  # Production start args
+  startArgs: []
+
+# External PostgreSQL connection
+database:
+  host: postgresql
+  port: 5432
+  name: keycloak
+  user: keycloak
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

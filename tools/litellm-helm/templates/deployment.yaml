@@ -34,6 +34,7 @@ spec:
           {{- toYaml .Values.securityContext | nindent 12 }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["litellm", "--port", {{ .Values.litellm.port | quote }}, "--config", "/app/config/litellm_config.yaml"]
         ports:
         - name: http
           containerPort: {{ .Values.litellm.port }}
@@ -70,14 +71,15 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         env:
-        {{- if .Values.litellm.database.enabled }}
-        - name: DATABASE_URL
-          value: {{ .Values.litellm.database.url | quote }}
-        {{- end }}
+        - name: LITELLM_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.auth.secretName }}
+              key: litellm-master-key
         - name: LITELLM_LOG
-          value: {{ .Values.litellm.logging.logFile | quote }}
-        - name: LITELLM_LOG_LEVEL
           value: {{ .Values.litellm.logging.level | quote }}
+        - name: PORT
+          value: {{ .Values.litellm.port | quote }}
         {{- if .Values.litellm.proxyEnabled }}
         - name: LITELLM_PROXY_CONFIG
           value: "/app/config/litellm_config.yaml"
@@ -89,16 +91,6 @@ spec:
         lifecycle:
           {{- toYaml . | nindent 12 }}
         {{- end }}
-        command:
-        - "litellm"
-        - "--config"
-        {{- if .Values.configMap.enabled }}
-        - "/app/config/litellm_config.yaml"
-        {{- else }}
-        - "/app/config/litellm_config.yaml"
-        {{- end }}
-        - "--port"
-        - {{ .Values.litellm.port | quote }}
       volumes:
       {{- if .Values.configMap.enabled }}
       - name: config

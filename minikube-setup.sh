@@ -166,13 +166,22 @@ start_minikube() {
     fi
 
     echo "🚀 Starting Minikube ($(( REQUIRED_MEM_GB - 1 ))GB RAM, ${num_cpus} CPUs)..."
+
+    # On macOS with the Docker driver the Minikube node IP (192.168.49.x) is inside
+    # Colima's VM and is not reachable from the Mac host. Mapping ports 80 and 443
+    # makes them accessible on localhost so nip.io URLs resolve correctly.
+    local extra_flags=""
+    if [[ "$OS" == "Darwin" ]]; then
+        extra_flags="--ports=80:80,443:443"
+    fi
+
     minikube start \
         --memory=$(( REQUIRED_MEM_GB - 1 ))g \
         --cpus=$num_cpus \
         --driver=docker \
         --cache-images=true \
         --disable-driver-mounts \
-        --extra-config=kubelet.cgroup-driver=systemd
+        $extra_flags
 
     minikube addons enable storage-provisioner
     minikube addons enable default-storageclass
