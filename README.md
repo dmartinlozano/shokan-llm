@@ -47,6 +47,23 @@ Every Helm chart ships with production-oriented values: resource requests and li
 
 ---
 
+## Architecture
+
+The diagram below shows all services, their roles, and how they connect inside the `shokanllm` Kubernetes namespace.
+
+![Shokan-LLM Architecture](images/arquitecture.png)
+
+**Key flows at a glance:**
+
+- The **browser** reaches Shokan Core through the Kubernetes Ingress. Authentication is delegated to **Keycloak** (OIDC), and every access decision — who can chat, which data sources a user can read, which MCP connectors they can invoke — is evaluated by **OpenFGA** in real time.
+- On each chat turn, the **Shokan Core** orchestrator retrieves semantically relevant chunks from **Qdrant** (RAG layer), collects live context from the enabled **MCP connectors** (Git, Jira, Confluence, Slack, Gmail, Discord), assembles a single optimized prompt, and routes it to the appropriate LLM backend: **Ollama** for local models, or **LiteLLM** for cloud models (Claude, GPT-4o, Gemini).
+- All configuration and credentials live in a single **Kubernetes Secret** (`shokanllm-secret`). There is no additional database for the application layer — the K8s API is the config store.
+- A scheduled **Ingest CronJob** pulls data from connected sources (S3, Google Drive, local volumes, SFTP), generates vector embeddings via Ollama, and indexes them into Qdrant so the RAG layer stays current.
+
+For the full component reference, connection map, and design rationale see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
 ## System Requirements
 
 - **OS:** macOS (Apple Silicon / Intel) or Linux (Debian / Ubuntu / Fedora)
